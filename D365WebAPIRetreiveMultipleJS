@@ -1,27 +1,21 @@
-function retrieveMultipleRecords(entityName, query) {
-    var req = new XMLHttpRequest();
-    req.open("GET", Xrm.Page.context.getClientUrl() + "/api/data/v9.0/" + entityName + query, true);
-    req.setRequestHeader("OData-MaxVersion", "4.0");
-    req.setRequestHeader("OData-Version", "4.0");
-    req.setRequestHeader("Accept", "application/json");
-    req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-    req.setRequestHeader("Prefer", "odata.include-annotations=*");
-
-    req.onreadystatechange = function () {
-        if (this.readyState === 4) {
-            req.onreadystatechange = null;
-            if (this.status === 200) {
-                var results = JSON.parse(this.response);
-                console.log(results);
-                // Example of handling the retrieved data
-                var resultArray = results.value;
-                resultArray.forEach(function (record) {
-                    console.log("Name: " + record.name + ", Account Number: " + record.accountnumber);
-                });
-            } else {
-                console.error(this.statusText);
-            }
+var scripting = {
+  retrieveMultipleContacts(executioncontext) {
+    debugger;
+    var formContext = executioncontext.getFormContext();
+    var accountId = formContext.data.entity.getId();
+    var fetchXml =
+      "<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'><entity name='contact' ><attribute name='fullname' /><attribute name='telephone1' /><attribute name='contactid' /><order attribute='fullname' descending='false' /><filter type='and'><condition attribute='parentcustomerid' operator='eq' uitype='account' value ='" +
+      accountId +
+      "' /></filter></entity ></fetch > ";
+    Xrm.WebApi.retrieveMultipleRecords('contact', 'fetchXml= ' + fetchXml).then(
+      function success(result) {
+        for (var i = 0; i < result.entities.length; i++) {
+          console.log(result.entities[i]);
         }
-    };
-    req.send();
-}
+      },
+      function (error) {
+        console.log(error.message);
+      }
+    );
+  },
+};
